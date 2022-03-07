@@ -32,10 +32,12 @@ window.addEventListener("load", () => {
         slider.classList.add("opened");
     }
     if (localStorage.getItem("name") && localStorage.getItem("email")) {
-        document.getElementById("dataCollection").style.display = "none";
+        let dataCollection = document.getElementById("dataCollection");
+        dataCollection.style.display = "none";
+        dataCollection.remove()
         document.getElementById("username").innerText = `${localStorage.getItem("name")}`
         document.getElementById("modalUsername").innerText = `${localStorage.getItem("name")}`
         document.getElementById("modalEmail").innerHTML = `Email: <a href="mailto:${localStorage.getItem("email")}">${localStorage.getItem("email")}</a>`
     }
-    await getBalance()
+    // await getBalance()
 });
