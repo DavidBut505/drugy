@@ -1,4 +1,4 @@
-# DRUGY LIVE: [https://davidbut505.github.io/drugy/]('https://davidbut505.github.io/drugy/')
+# DRUGY LIVE: ![https://davidbut505.github.io/drugy/](https://davidbut505.github.io/drugy/)
 
 # Install
 
