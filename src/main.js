@@ -7,7 +7,7 @@ const getBalance = async function () {
 }
 
 // save user data on data submission
-saveUserDataBtn.addEventListener("click", evt => {
+saveUserDataBtn.addEventListener("click", () => {
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     if (name === "") {
@@ -17,8 +17,17 @@ saveUserDataBtn.addEventListener("click", evt => {
     } else {
         localStorage.setItem("name", name);
         localStorage.setItem("email", email);
-        location.reload();
+        document.getElementById("logout").classList.add("d-flex")
+        document.getElementById("dataCollection").remove()
+        location.reload()
     }
+})
+
+// logout user
+logout.addEventListener("click", () => {
+    localStorage.clear()
+    document.getElementById("logout").remove()
+    location.reload()
 })
 
 // on screen load
@@ -38,6 +47,8 @@ window.addEventListener("load", () => {
         document.getElementById("username").innerText = `${localStorage.getItem("name")}`
         document.getElementById("modalUsername").innerText = `${localStorage.getItem("name")}`
         document.getElementById("modalEmail").innerHTML = `Email: <a href="mailto:${localStorage.getItem("email")}">${localStorage.getItem("email")}</a>`
+    } else {
+        document.getElementById("logout").classList.add("d-none")
     }
     // await getBalance()
 });
