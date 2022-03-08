@@ -14,76 +14,104 @@ interface IERC20Token {
   event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-contract Marketplace {
-
-    uint internal productsLength = 0;
-    address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
-
-    struct Product {
+contract DrugyMarketplace {
+    // drug struct
+    struct Drug {
         address payable owner;
         string name;
         string image;
         string description;
-        string location;
-        uint price;
-        uint sold;
+        uint256 price;
+        bool isSold;
     }
 
-    mapping (uint => Product) internal products;
+    // length of drugs
+    uint256 internal drugsLength = 0;
+    // cUSD address
+    address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
+    // admin address
+    address internal adminAddress = 0x306eB740077319621a555d1E424845bF2b4d5337;
 
-    function writeProduct(
-        string memory _name,
-        string memory _image,
-        string memory _description, 
-        string memory _location, 
-        uint _price
-    ) public {
-        uint _sold = 0;
-        products[productsLength] = Product(
+    // check if admin
+    modifier isAdmin() {
+        require(msg.sender == adminAddress, "Only the admin can access this");
+        _;
+    }
+
+    // mapping the Drug struct internally
+    mapping (uint256 => Drug) internal drugs;
+
+    // add drug from struct array
+    function addDrug(string memory _name, string memory _image, string memory _description, uint256 _price ) public isAdmin {
+        drugs[drugsLength] = Drug(
             payable(msg.sender),
             _name,
             _image,
             _description,
-            _location,
             _price,
-            _sold
+            false
         );
-        productsLength++;
+        drugsLength++;
     }
 
-    function readProduct(uint _index) public view returns (
+    // get drugs from struct array
+    function getDrug(uint256 _index) public view returns (
         address payable,
         string memory, 
         string memory, 
         string memory, 
-        string memory, 
-        uint, 
-        uint
+        uint256, 
+        bool
     ) {
         return (
-            products[_index].owner,
-            products[_index].name, 
-            products[_index].image, 
-            products[_index].description, 
-            products[_index].location, 
-            products[_index].price,
-            products[_index].sold
+            drugs[_index].owner,
+            drugs[_index].name, 
+            drugs[_index].image, 
+            drugs[_index].description, 
+            drugs[_index].price,
+            drugs[_index].isSold
         );
     }
+
+    // check if current user is admin
+    function isUserAdmin(address _address) public view returns (bool) {
+        if (_address == adminAddress) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     
-    function buyProduct(uint _index) public payable  {
+    // buying drug
+    function buyDrug(uint256 _index) public payable  {
         require(
           IERC20Token(cUsdTokenAddress).transferFrom(
             msg.sender,
-            products[_index].owner,
-            products[_index].price
+            drugs[_index].owner,
+            drugs[_index].price
           ),
           "Transfer failed."
         );
-        products[_index].sold++;
+        drugs[_index].owner = payable(msg.sender);
+        drugs[_index].isSold = true;
     }
     
-    function getProductsLength() public view returns (uint) {
-        return (productsLength);
+    // change drug ownership
+    function changeDrugOwnership(uint256 _index, address currentOwner, address newOwner) public {
+        require(msg.sender == currentOwner, "You are not the owner! so you can't ownership.");
+        require(
+            IERC20Token(cUsdTokenAddress).transferFrom(
+                msg.sender,
+                drugs[_index].owner,
+                drugs[_index].price
+            ),
+            "Transaction could not be performed"
+        );
+
+        drugs[_index].owner = payable(newOwner);
+    }
+
+    function getdrugsLength() public view returns (uint256) {
+        return (drugsLength);
     }
 }
