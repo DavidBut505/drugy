@@ -3,7 +3,7 @@ import { newKitFromWeb3 } from "@celo/contractkit"
 import BigNumber from "bignumber.js"
 import DrugyMarketplaceAbi from "../contract/drugy.abi.json"
 import erc20Abi from "../contract/erc20.abi.json"
-import { ERC20_DECIMALS, contractAddress, cUSDContractAddress } from './utils/constants';
+import { ERC20_DECIMALS, contractAddress, cUSDContractAddress } from './constants';
 
 let kit
 let contract
