@@ -144,7 +144,7 @@ contract DrugyMarketplace {
     // Function to  change the ownership of the store
     function changeDrugOwnership(
         address newOwner
-    ) public isAdmin{
+    ) public payable isAdmin{
         uint totalPriceOfAllDrugsInStore;
         for(uint i =0; i <= drugsLength; i++){
             totalPriceOfAllDrugsInStore += drugs[i].price;
