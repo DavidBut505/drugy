@@ -34,9 +34,17 @@ contract DrugyMarketplace {
         string image;
         string description;
         uint256 price;
-        bool isSold;
         bool isReported;
+        uint256 quantity; // added a quantity
     }
+
+    // events will be triggered when the specific function is executed.
+    // This will provide better logs of function calls and transactions.
+    event DrugListed(address indexed admin, uint256 drug_index, string name, uint256 quantity);
+    event DrugBought(address indexed owner, address buyer, uint256 drug_index, string name, uint256 quantity);
+    event DrugOutofStock(address indexed owner, string name);
+    event ChangeDrugOwnership(address indexed previous_owner, address newOwner, string name);
+    event ChangeStoreOwner(address indexed owner, address newOwner);
 
     // length of drugs
     uint256 internal drugsLength = 0;
@@ -60,7 +68,8 @@ contract DrugyMarketplace {
         string memory _name,
         string memory _image,
         string memory _description,
-        uint256 _price
+        uint256 _price,
+        uint256 _quantity // added a quantity parameter
     ) public isAdmin {
         drugs[drugsLength] = Drug(
             payable(msg.sender),
@@ -69,8 +78,9 @@ contract DrugyMarketplace {
             _description,
             _price,
             false,
-            false
+            _quantity
         );
+        emit DrugListed(msg.sender, drugsLength, _name, _quantity);
         drugsLength++;
     }
 
@@ -85,7 +95,7 @@ contract DrugyMarketplace {
             string memory,
             uint256,
             bool,
-            bool
+            uint256
         )
     {
         return (
@@ -94,9 +104,9 @@ contract DrugyMarketplace {
             drugs[_index].image,
             drugs[_index].description,
             drugs[_index].price,
-            drugs[_index].isSold,
-            drugs[_index].isReported
-        );
+            drugs[_index].isReported,
+            drugs[_index].quantity
+            );
     }
 
     // check if current user is admin
@@ -109,17 +119,22 @@ contract DrugyMarketplace {
     }
 
     // buying drug
-    function buyDrug(uint256 _index) public payable {
+    function buyDrug(uint256 _index, uint256 _buyquantity) public payable {
+        require(_buyquantity <= drugs[_index].quantity && drugs[_index].quantity > 0,
+                "Not enough stock available"
+        );
         require(
             IERC20Token(cUsdTokenAddress).transferFrom(
                 msg.sender,
                 drugs[_index].owner,
-                drugs[_index].price
+                drugs[_index].price * _buyquantity 
             ),
             "Transfer failed."
         );
-        drugs[_index].owner = payable(msg.sender);
-        drugs[_index].isSold = true;
+        drugs[_index].quantity = drugs[_index].quantity - _buyquantity;
+        if (drugs[_index].quantity == 0)
+            emit DrugOutofStock(drugs[_index].owner, drugs[_index].name);
+        emit DrugBought(drugs[_index].owner, msg.sender, _index, drugs[_index].name, _buyquantity);
     }
 
     // report drug
@@ -135,26 +150,44 @@ contract DrugyMarketplace {
         drugs[_index].isReported = true;
     }
 
-    // change drug ownership
+    // changing the ownership of a specific drug
+    // its like buying the rights of the drug. Not buying the physical drug. 
+    // So no change in drug quantity
     function changeDrugOwnership(
         uint256 _index,
         address currentOwner,
         address newOwner
-    ) public {
+    ) public payable {
         require(
             msg.sender == currentOwner,
             "You are not the owner! so you can't ownership."
         );
         require(
             IERC20Token(cUsdTokenAddress).transferFrom(
+                newOwner,
                 msg.sender,
-                drugs[_index].owner,
                 drugs[_index].price
             ),
             "Transaction could not be performed"
         );
 
         drugs[_index].owner = payable(newOwner);
+        emit ChangeDrugOwnership(msg.sender, newOwner, drugs[_index].name);
+    }
+
+    // function to sell the whole drug store
+    // This doesnot mean that every drug will be owned by the admin.
+    function sellStore(uint256 storeAmount, address newStoreOwner) public payable isAdmin{
+        require(
+            IERC20Token(cUsdTokenAddress).transferFrom(
+                newStoreOwner,
+                msg.sender,
+                storeAmount
+            ),
+            "Transaction could not be performed"
+        );
+        adminAddress = newStoreOwner;
+        emit ChangeStoreOwner(msg.sender, newStoreOwner);
     }
 
     // get total drug length
