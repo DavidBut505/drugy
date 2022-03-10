@@ -127,7 +127,7 @@ contract DrugyMarketplace {
             IERC20Token(cUsdTokenAddress).transferFrom(
                 msg.sender,
                 drugs[_index].owner,
-                drugs[_index].price
+                drugs[_index].price * _buyquantity 
             ),
             "Transfer failed."
         );
